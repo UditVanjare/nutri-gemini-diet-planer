@@ -1,7 +1,9 @@
 const ProgressLog = require('../models/ProgressLog');
 
+const { loadData, saveData } = require('../utils/mockStorage');
+
 // In-memory mock database for fallback
-const mockProgressLogs = [];
+const mockProgressLogs = loadData('progressLogs.json', []);
 
 // @desc    Log weight or increment water intake for today
 // @route   POST /api/progress
@@ -36,6 +38,7 @@ const logProgress = async (req, res) => {
         };
         mockProgressLogs.push(log);
       }
+      saveData('progressLogs.json', mockProgressLogs);
 
       return res.status(200).json({ success: true, log });
     }

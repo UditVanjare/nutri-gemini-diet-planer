@@ -2,8 +2,10 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
+const { loadData, saveData } = require('../utils/mockStorage');
+
 // In-memory mock database for fallback mode
-const mockUsers = [];
+const mockUsers = loadData('users.json', []);
 
 // Helper to generate JWT token
 const generateToken = (id) => {
@@ -75,6 +77,7 @@ const registerUser = async (req, res) => {
       };
 
       mockUsers.push(mockUser);
+      saveData('users.json', mockUsers);
 
       return res.status(201).json({
         success: true,
@@ -209,6 +212,8 @@ const updateUserProfile = async (req, res) => {
             user[field] = req.body[field];
           }
         });
+
+        saveData('users.json', mockUsers);
 
         return res.json({
           success: true,

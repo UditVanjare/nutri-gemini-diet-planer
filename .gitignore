@@ -1,1 +1,4 @@
 server/.env
+server/data/
+node_modules/
+server/node_modules/

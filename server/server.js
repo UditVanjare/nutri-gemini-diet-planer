@@ -4,9 +4,15 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 
 // Connect to Database
-connectDB();
+const dbInitPromise = connectDB();
 
 const app = express();
+
+// Block requests until DB initialization is complete (to ensure process.env.USE_MEMORY_DB is set correctly)
+app.use(async (req, res, next) => {
+  await dbInitPromise;
+  next();
+});
 
 // Middleware
 app.use(cors({

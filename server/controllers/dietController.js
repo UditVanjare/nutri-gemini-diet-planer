@@ -25,9 +25,11 @@ const getProviderName = () => {
   return 'Offline';
 };
 
+const { loadData, saveData } = require('../utils/mockStorage');
+
 // In-memory fallbacks
-const mockSessions = {}; // userId -> session
-const mockDietPlans = []; // array of plans
+const mockSessions = loadData('sessions.json', {}); // userId -> session
+const mockDietPlans = loadData('dietPlans.json', []); // array of plans
 
 // Helper to format detailed plan message in chat
 const formatPlanMessage = (generatedPlan) => {
@@ -246,6 +248,8 @@ const getChatSession = async (req, res) => {
         };
         mockSessions[userId] = session;
       }
+      saveData('sessions.json', mockSessions);
+      saveData('dietPlans.json', mockDietPlans);
       return res.json({ success: true, session, provider });
     }
 
@@ -367,6 +371,7 @@ const sendChatMessage = async (req, res) => {
 
       if (isMemory) {
         mockSessions[userId] = session;
+        saveData('sessions.json', mockSessions);
       } else {
         await session.save();
       }
@@ -394,6 +399,7 @@ const sendChatMessage = async (req, res) => {
           text: `⚠️ ${validationError.message}\n\nLet's try again: ${BOT_QUESTIONS[currentStep].replace("Welcome! I am your Personal AI Diet Coach. I will help you build a customized diet and workout plan. Let's start with a few details. First, ", "")}`,
           createdAt: new Date()
         });
+        saveData('sessions.json', mockSessions);
         return res.json({ success: true, session, provider });
       }
 
@@ -407,6 +413,7 @@ const sendChatMessage = async (req, res) => {
           text: BOT_QUESTIONS[nextStep],
           createdAt: new Date()
         });
+        saveData('sessions.json', mockSessions);
         return res.json({ success: true, session, provider });
       } else {
         // Generate plan
@@ -434,6 +441,7 @@ const sendChatMessage = async (req, res) => {
         const user = mockUsers.find(u => u._id === userId);
         if (user) {
           Object.assign(user, session.intakeData);
+          saveData('users.json', mockUsers);
         }
 
         session.messages.push({
@@ -444,6 +452,8 @@ const sendChatMessage = async (req, res) => {
         });
 
         session.currentStep = BOT_QUESTIONS.length;
+        saveData('sessions.json', mockSessions);
+        saveData('dietPlans.json', mockDietPlans);
         return res.json({ success: true, session, dietPlan, provider });
       }
     } else {
@@ -522,6 +532,7 @@ const resetChatSession = async (req, res) => {
         intakeData: {}
       };
       mockSessions[userId] = session;
+      saveData('sessions.json', mockSessions);
       return res.json({ success: true, session, provider });
     }
 
@@ -614,6 +625,7 @@ const deleteDietPlan = async (req, res) => {
         return res.status(404).json({ success: false, message: 'Diet plan not found' });
       }
       mockDietPlans.splice(index, 1);
+      saveData('dietPlans.json', mockDietPlans);
       return res.json({ success: true, message: 'Diet plan deleted successfully' });
     }
 
@@ -666,6 +678,7 @@ const generateDirect = async (req, res) => {
         createdAt: new Date()
       };
       mockDietPlans.push(dietPlan);
+      saveData('dietPlans.json', mockDietPlans);
       return res.status(201).json({ success: true, plan: dietPlan });
     }
 
@@ -728,6 +741,7 @@ const regenerateDietPlan = async (req, res) => {
         createdAt: new Date()
       };
       mockDietPlans.push(newPlan);
+      saveData('dietPlans.json', mockDietPlans);
       return res.status(201).json({ success: true, plan: newPlan });
     }
 
